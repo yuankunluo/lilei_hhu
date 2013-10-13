@@ -1,0 +1,136 @@
+# -*- coding: utf-8 -*-
+from model import Sentence
+from model import Cluster
+from model import Corpus
+import re
+from xml.etree.ElementTree import parse
+import time
+import os
+
+class Controller:
+    """
+	Controller to all things
+    """
+
+    datenbank = {}
+
+    def parseXML(self,xml):
+        results = {}
+        results['contents']=[]
+        tree = parse(xml)
+        texts = tree.findall('text')
+        for text in texts:
+            sectionID = text.attrib['ID'].strip() # sectionID
+            results['sectionID'] = sectionID
+            sectionType = text.attrib['TYPE'] #textType
+            results['sectionType'] = sectionType
+            files = text.findall('file')
+            for f in files:
+                fileID = f.attrib['ID'].strip() #fileID
+                paragraphs = f.findall('p')
+                for paragraph in paragraphs:
+                    sentences = paragraph.findall('s')
+                    for sentence in sentences:
+                        sentNr = sentence.attrib['n'].strip() # sentence Nr.
+                        cps = sentence.getchildren() # compenents in every sentence
+                        s = Sentence() # make a new instance of sentence
+                        s.textInfo = []
+                        s.linInfo =[]
+                        s.posInfo = []
+                        s.tagInfo = []
+                        for cp in cps:
+                            tag = cp.tag # tag
+                            pos = cp.attrib['POS'] # pos-attr
+                            text = cp.text # text
+                            s.textInfo.append(text)
+                            s.tagInfo.append(tag)
+                            s.posInfo.append(pos)
+                        # append this sent with unique information in corpus
+                        # make unique information
+                        us = [fileID, sentNr]
+                        s.id = '-'.join(us)
+                        results['contents'].append(s)
+        results['volume'] = len(results['contents'])
+#         print("{s}\nParseXML Results: \nsection:{id}\ntype:{type}\nvolumn:{volumn}\n{s}".format(
+#                     s="-"*15,id=results['sectionID'], type=results['sectionType'], volumn= results['volume']))
+        return results
+
+    def mixXML(self,cnResults, enResults):
+        results = []  # copy one
+        cnList = cnResults['contents']
+        enList = enResults['contents']
+        if len(cnList) == len(enList):
+            for i in range(0,len(cnList)):
+                cnSent = cnList[i]
+                enSent = enList[i]
+                if cnSent.id != enSent.id:
+                    raise Exception()
+                else:
+                    cnSent.cnInfo = cnSent.textInfo[:]
+                    cnSent.enInfo = enSent.textInfo[:]
+                    results.append(cnSent)
+                    #print(cnSent)
+            #print(len(results))
+            return results
+        else:
+            raise Exception()
+            print("mix failure.")
+
+
+    def addXMLToCorpus(self, corpus, cn_xml, en_xml):
+        if isinstance(corpus, Corpus):
+            cnResults = self.parseXML(cn_xml)
+            enResults = self.parseXML(en_xml)
+            keys = ['sectionID', 'sectionType', 'volume']
+            cInfo = "-".join([str(cnResults[value]) for value in keys])
+            eInfo = "-".join([str(enResults[value]) for value in keys])
+            sections = corpus.sections
+            contentsList = corpus.contentsList
+            contentsDict = corpus.contentsDict
+            if cInfo == eInfo:  # test if two xml parsed data is same
+                results = self.mixXML(cnResults, enResults)
+                sections.append((cnResults['sectionID'],
+                cnResults['sectionType']))
+                for sent in results:
+                    contentsList.append(sent)
+                    contentsDict[sent.id] = sent
+        else:
+            print("Corpus was not fund.")
+            return False
+
+    def makeCorpus(self, name="Default Corpus"):
+        corpus = Corpus(name)
+        self.datenbank[name] = corpus
+        return corpus
+
+    def getCorpus(self, name):
+        return self.datenbank[name]
+
+    def __repr__(self):
+        return "I am a Controller"
+
+
+
+
+#===================================================================
+#Test Code
+#
+#测试代码
+#===================================================================
+if __name__ == '__main__':
+    path = os.path.abspath(__file__)
+    path = os.getcwd()[:-5]
+    os.chdir(path)
+    ct = Controller()
+    # make test corpus
+    c = ct.makeCorpus("Test Corpus")
+    ct.addXMLToCorpus(c, 'input/c1.xml', 'input/e1.xml')
+    s = c.getSentByID("A01-0008")
+    print(s)
+    for tag in s.tagInfo:
+        print((type(tag)))
+
+
+
+
+
