@@ -9,6 +9,16 @@ Created on Oct 7, 2013
 import re
 import time
 
+def uniToPrint(info = []):
+    results = []
+    if len( info ) > 0:
+        for cp in info:
+            results.append(cp.decode())
+    else:
+        return None
+    return results
+
+
 class Sentence:
     textInfo = []
     cnInfo = []
@@ -16,16 +26,35 @@ class Sentence:
     tagInfo = []
     posInfo = []
     enInfo = []
-    id = ''
+    ID = ''
     clusters = []
     preSent = None
     nextSent = None
+    
+    def __init__(self):
+        pass
+    
+    def __init__(self, ID = 0, cnInfo = None, enInfo = None, posInfo = None, tagInfo = None,):
+        self.ID = ID
+        self.cnInfo = cnInfo
+        self.enInfo = enInfo
+        self.tagInfo = tagInfo
+        self.posInfo = posInfo
+    
+    
+    def htmlPrint(self):
+        pass
+            
+            
+    
+    def htmlOutput(self):
+        pass
 
     def __repr__(self):
         if self is None:
             return ''
         sent = "{s}\n"
-        sent += "ID: " + self.id + "\n"
+        sent += "ID: " + self.ID + "\n"
         if(len(self.enInfo) > 0):
             sent += "CN: " + " ".join(self.cnInfo) + "\n"
             sent += "EN: " + " ".join(self.enInfo) + "\n"
@@ -40,42 +69,82 @@ class Sentence:
         if self is None:
             return ''
         sent = "{s}\n"
-        sent += "ID: \t" + self.id.decode() + "\n"
+        sent += "ID: \t" + self.ID.decode() + "\n"
         if(len(self.enInfo) > 0):
-            sent += "CN: \t" + " ".join(self.uniToPrint(self.cnInfo)) + "\n"
-            sent += "EN: \t" + " ".join(self.uniToPrint(self.enInfo)) + "\n"
+            sent += "CN: \t" + " ".join(uniToPrint(self.cnInfo)) + "\n"
+            sent += "EN: \t" + " ".join(uniToPrint(self.enInfo)) + "\n"
         else:
-            sent += "TEXT: \t" + ' '.join(self.uniToPrint(self.textInfo)) + "\n"
-        sent += "POS: \t" + " ".join(self.uniToPrint(self.posInfo)) + "\n"
-        sent += "TAG: \t" + " ".join(self.uniToPrint(self.tagInfo)) + "\n"
+            sent += "TEXT: \t" + ' '.join(uniToPrint(self.textInfo)) + "\n"
+        sent += "POS: \t" + " ".join(uniToPrint(self.posInfo)) + "\n"
+        sent += "TAG: \t" + " ".join(uniToPrint(self.tagInfo)) + "\n"
+        sent += "Clusters: \t" + str(len(self.clusters)) + "\n"
         sent += "{s}"
         return sent.format(s = "-"*20)
     
-    def uniToPrint(self, info = []):
-        results = []
-        if len( info ) > 0:
-            for cp in info:
-                results.append(cp.decode())
-        else:
-            return None
-        return results
 
     def makeClusters(self):
         results = []
+        # the list of punctuation in chinese
+        punctuation = [u"。" , u"，",u"！",u"——",u"；",u"：",u"？"]
+        start = 0
+        end = 0
+        IDbase = 0
+        for index in range(len(self.cnInfo)):
+            if self.cnInfo[index] in punctuation:
+                end = index
+                ID = self.ID + ":" + str(IDbase)
+                cnInfo = self.cnInfo[start : end]
+                enInfo = self.enInfo[start : end]
+                posInfo = self.posInfo[start : end]
+                tagInfo = self.tagInfo[start : end]
+                culster = Cluster(ID, cnInfo, enInfo, posInfo, tagInfo)
+                results.append(culster)
+                start = index + 1
+                IDbase += 1
+        if len(results) > 1:
+            for index in range(len(results)):
+                if index == 0:
+                    results[index].nextCluster = results[index + 1]
+                if index == len(results)-1:
+                    results[index].nextCluster = results[index - 1]
+                elif 1 <= index <= len(results):
+                    results[index].preSent = results[index - 1]
+                    results[index].nextSent = results[index + 1]
+        return results       
         
         
 
 
-class Cluster:
-    c_id = ''
-    pinInfo = []
+class Cluster(Sentence):
+    ID = ''
+    enInfo = []
     cnInfo = []
     tagInfo = []
     posInfo = []
+    cnStr = ""
     preCluster = None
     nextCluster = None
+    
+    def htmlReady(self):
+        self.cnStr = ''.join(self.cnInfo)
+        
+    def __init__(self, ID = 0, cnInfo = None, enInfo = None, posInfo = None, tagInfo = None,):
+        self.ID = ID
+        self.cnInfo = cnInfo
+        self.enInfo = enInfo
+        self.tagInfo = tagInfo
+        self.posInfo = posInfo
+        
+    
+    def __str__(self):
+        if self is None:
+            return ''
+        sent = "{s}\n"
+        sent += "ID: \t" + self.ID.decode() + "\n"
+        sent += "{s}"
+        return sent.format(s = "-"*20)
+    
 
-    pass
 
 class Corpus:
     """
@@ -90,7 +159,7 @@ class Corpus:
 
     def __init__(self, name=None):
         if name is None:
-            name = "Default Unnamed Corpus"
+            name = u"Default Unnamed Corpus"
         self.name = name
         self.created_time = time.ctime()
         self.contents = {}
@@ -135,11 +204,11 @@ class Task:
     name = ""
     desc = ""
     cnPattern = None
-    enPattern = None
+    posPattern = None
     result = None
     
     def __init__(self, taskName, taskDesc, cnPattern = None,
-                 enPattern = None):
+                 posPattern = None):
         if len(taskName) >= 0:
             if isinstance(taskName, str):
                 taskName = unicode(taskName)
@@ -157,7 +226,7 @@ class Task:
         else:
             self.desc = unicode("Unknown task description.")
         self.cnPattern = cnPattern
-        self.enPattern = enPattern
+        self.posPattern = posPattern
     
     def __str__(self):
         result = "{s}"
