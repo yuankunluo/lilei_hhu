@@ -7,6 +7,7 @@ Created on Sun Nov 24 14:47:10 2013
 import controller
 import search
 import output
+import pickle
 
 fs = ['A','B','C','D','E','F','G','H','J','K','L','M','N','P','R']
 
@@ -24,12 +25,16 @@ def automatMakeCorpus():
 
     
 def automatHTML(word = '们'):
-    fs = ['A','B','C','D','E','F','G','H','J','K','L','M','N','P','R']
-    for f in fs:
-        try:
-            c = start(f, "LCMC/cn/LCMC_"+f+".xml", "LCMC/en/LCMC_"+f+".xml")
-            s = search.searchCNWordandHighlight(c,word)
-            output.outputHtml(s,"output/html/"+ f,f)
-        except:
-            continue
+    """
+    """
+    import os
+    filelist = os.listdir("data/")
+    for fname in filelist:
+        with open("data/"+ fname, "rb") as f:
+            c = pickle.load(f)
+            result1 = search.searchCNWordandHighlight(c, word)
+            result2 = search.searchWordWithPos(c,word)
+            output.outputHtml(c,result1, "men")
+            output.outputHtml(c,result2,"menwithn")
+    
     

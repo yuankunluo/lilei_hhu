@@ -11,6 +11,10 @@ em {
     background-color: yellow;
 }
 
+em.norm {
+    background-color: orange;
+}
+
 .hightlight {
     border-bottom-color: beige;
     background: beige;

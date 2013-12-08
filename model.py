@@ -174,6 +174,13 @@ class Corpus:
         text += "{s}"
         return text.format(s="="*20, name=self.name, time=self.created_time)
 
+    def html(self):
+        text = "<h1>Corpus Name: "+ self.name +"</h1>"
+        text += "<p>Created at: " + str(self.created_time) + "<p>"
+        text += "<p>Sections Numbers: " + self.sections + "</p>"
+        text += "<p>Corpus Volume: " + str(self.volume) +  "</p>"
+        return text
+        
 
 
 class Task:
