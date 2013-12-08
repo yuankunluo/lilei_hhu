@@ -7,13 +7,6 @@ import copy
 import re
 from xml.etree.ElementTree import parse
 import time
-import os
-
-# - PATH Setting
-path = os.path.abspath(__file__)
-path = os.getcwd()[:-5]
-INPUTPATH = path 
-OUTPUTPATH = path
 
 class Controller:
     """

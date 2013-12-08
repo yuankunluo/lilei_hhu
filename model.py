@@ -157,15 +157,13 @@ class Corpus:
     contentsDict = {}
     sections = []
     
-    def saveCorpus(self):
-        import os
+    def saveCorpus(self,output=None):
         import pickle
-        path = os.path.abspath(__file__)
-        path = os.getcwd()[:-5]
-        output = path + "data/"
-        with open( output + self.name + ".db") as f:
+        if not output:
+            output ="data/"
+        with open( output + self.name + ".db", 'wb') as f:
             pickle.dump(self, f)
-        print("Corpus: " + self.name +" was stored.")
+        print("Corpus: " + self.name +".db was stored.")
 
     def __init__(self, name=None):
         if name is None:
