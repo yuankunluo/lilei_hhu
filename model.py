@@ -30,34 +30,27 @@ class Sentence:
     clusters = []
     preSent = None
     nextSent = None
-    
-    def __init__(self):
-        pass
+
     
     def __init__(self, ID = 0, cnInfo = None, enInfo = None, posInfo = None, tagInfo = None,):
+        """Constructure for Sentence:
+        
+        """
         self.ID = ID
         self.cnInfo = cnInfo
         self.enInfo = enInfo
         self.tagInfo = tagInfo
         self.posInfo = posInfo
-    
-    
-    def htmlPrint(self):
-        pass
-            
-            
-    
-    def htmlOutput(self):
-        pass
 
     def __repr__(self):
         if self is None:
             return ''
         sent = "{s}\n"
         sent += "ID: " + self.ID + "\n"
-        if(len(self.enInfo) > 0):
-            sent += "CN: " + " ".join(self.cnInfo) + "\n"
-            sent += "EN: " + " ".join(self.enInfo) + "\n"
+        if self.enInfo and self.cnInfo:
+            if(len(self.enInfo) > 0):
+                sent += "CN: " + " ".join(self.cnInfo) + "\n"
+                sent += "EN: " + " ".join(self.enInfo) + "\n"
         else:
             sent += "TEXT: " + ' '.join(self.textInfo) + "\n"
         sent += "POS: " + " ".join(self.posInfo) + "\n"
@@ -152,10 +145,10 @@ class Corpus:
     like A:{}
     """
     name = ""
+    volume = 0
     created_time = None
-    contentsList = []
-    contentsDict = {}
-    sections = []
+    sents = {}
+    sections = ""
     
     def saveCorpus(self,output=None):
         import pickle
@@ -170,43 +163,18 @@ class Corpus:
             name = u"Default Unnamed Corpus"
         self.name = name
         self.created_time = time.ctime()
-        self.contents = {}
-
-    def getSections(self):
-        sc = ",".join([str(i) for (i, t) in self.sections])
-        return sc
-
-    def getVolume(self):
-        volume = (len(self.contentsList))
-        return str(volume)
-
+        self.sents = {}
 
     def __repr__(self):
         text = "{s}\nCorpus Information:\n"
         text += "\tCorpus Name: {name}\n"
         text += "\tCreated Time: {time}\n"
-        text += "\tSections Numbers: " + self.getSections() + "\n"
-        text += "\tCorpus Volume: " + self.getVolume() + "\n"
+        text += "\tSections Numbers: " + str(self.sections) + "\n"
+        text += "\tCorpus Volume: " + str(self.volume) + "\n"
         text += "{s}"
         return text.format(s="="*20, name=self.name, time=self.created_time)
 
-    def getSentByID(self, ID):
-        try:
-            sent = self.contentsDict.get(ID)
-            if sent != None:
-                return sent
-        except:
-            print("KeyError:%s. Not Fund in Corpus." % (ID))
 
-    def getSentsByRange(self, first, last):
-        if isinstance(first, int) and isinstance(last, int):
-            try:
-                results = self.contentsList[first:last]
-                return results
-            except:
-                print("RangeError: %s - %s not valid." % (str(first), str(last)))
-        else:
-            print("Please give a range with int.")
 
 class Task:
     name = ""
